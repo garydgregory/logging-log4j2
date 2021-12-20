@@ -16,13 +16,14 @@
  */
 package org.apache.logging.log4j.core.pattern;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
-import org.apache.logging.log4j.core.util.ArrayUtils;
-import org.apache.logging.log4j.core.util.Constants;
 import org.apache.logging.log4j.core.util.Loader;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.MultiformatMessage;
@@ -38,23 +39,12 @@ import org.apache.logging.log4j.util.StringBuilderFormattable;
 @ConverterKeys({ "m", "msg", "message" })
 @PerformanceSensitive("allocation")
 public class MessagePatternConverter extends LogEventPatternConverter {
-
+    
+    private static final String LOOKUPS = "lookups";
     private static final String NOLOOKUPS = "nolookups";
 
     private MessagePatternConverter() {
         super("Message", "message");
-    }
-
-    private static int loadNoLookups(final String[] options) {
-        if (options != null) {
-            for (int i = 0; i < options.length; i++) {
-                final String option = options[i];
-                if (NOLOOKUPS.equalsIgnoreCase(option)) {
-                    return i;
-                }
-            }
-        }
-        return -1;
     }
 
     private static TextRenderer loadMessageRenderer(final String[] options) {
@@ -86,20 +76,30 @@ public class MessagePatternConverter extends LogEventPatternConverter {
      * @return instance of pattern converter.
      */
     public static MessagePatternConverter newInstance(final Configuration config, final String[] options) {
-        int noLookupsIdx = loadNoLookups(options);
-        boolean noLookups = Constants.FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS || noLookupsIdx >= 0;
-        String[] formats = noLookupsIdx >= 0 ? ArrayUtils.remove(options, noLookupsIdx) : options;
-        TextRenderer textRenderer = loadMessageRenderer(noLookupsIdx >= 0 ? ArrayUtils.remove(options, noLookupsIdx) : options);
+        String[] formats = withoutLookupOptions(options);
+        TextRenderer textRenderer = loadMessageRenderer(formats);
         MessagePatternConverter result = formats == null || formats.length == 0
                 ? SimpleMessagePatternConverter.INSTANCE
                 : new FormattedMessagePatternConverter(formats);
-        if (!noLookups && config != null) {
-            result = new LookupMessagePatternConverter(result, config);
-        }
         if (textRenderer != null) {
             result = new RenderingPatternConverter(result, textRenderer);
         }
         return result;
+    }
+
+    private static String[] withoutLookupOptions(final String[] options) {
+        if (options == null || options.length == 0) {
+            return options;
+        }
+        List<String> results = new ArrayList<>(options.length);
+        for (String option : options) {
+            if (LOOKUPS.equalsIgnoreCase(option) || NOLOOKUPS.equalsIgnoreCase(option)) {
+                LOGGER.info("The {} option will be ignored. Message Lookups are no longer supported.", option);
+            } else {
+                results.add(option);
+            }
+        }
+        return results.toArray(new String[0]);
     }
 
     @Override
@@ -148,30 +148,6 @@ public class MessagePatternConverter extends LogEventPatternConverter {
                 toAppendTo.append(msg instanceof MultiformatMessage
                         ? ((MultiformatMessage) msg).getFormattedMessage(formats)
                         : msg.getFormattedMessage());
-            }
-        }
-    }
-
-    private static final class LookupMessagePatternConverter extends MessagePatternConverter {
-        private final MessagePatternConverter delegate;
-        private final Configuration config;
-
-        LookupMessagePatternConverter(final MessagePatternConverter delegate, final Configuration config) {
-            this.delegate = delegate;
-            this.config = config;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void format(final LogEvent event, final StringBuilder toAppendTo) {
-            int start = toAppendTo.length();
-            delegate.format(event, toAppendTo);
-            int indexOfSubstitution = toAppendTo.indexOf("${", start);
-            if (indexOfSubstitution >= 0) {
-                config.getStrSubstitutor()
-                        .replaceIn(event, toAppendTo, indexOfSubstitution, toAppendTo.length() - indexOfSubstitution);
             }
         }
     }

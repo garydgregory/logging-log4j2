@@ -14,32 +14,29 @@
  * See the license for the specific language governing permissions and
  * limitations under the license.
  */
-package org.apache.logging.log4j.core.util;
+package org.apache.logging.log4j.web;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.impl.Log4jContextFactory;
+import org.apache.logging.log4j.util.Constants;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Set-related convenience methods.
+ *
  */
-public final class SetUtils {
-    private SetUtils() {
+public class PropertyTest {
+
+    @Test
+    public void testShutdownHookDisabled() {
+        assertFalse(
+                ((Log4jContextFactory) LogManager.getFactory()).isShutdownHookEnabled(),
+                "Shutdown hook should be disabled by default in web applications");
     }
 
-    /**
-     * Extracts the Strings from a Set that start with a given prefix.
-     *
-     * @param set a Set of Strings (assumed to all be non-{@code null})
-     * @param prefix the prefix to look for in the string set
-     * @return an array of the matching strings from the given set
-     */
-    public static String[] prefixSet(final Set<String> set, final String prefix) {
-        final Set<String> prefixSet = new HashSet<>();
-        for (final String str : set) {
-            if (str.startsWith(prefix)) {
-                prefixSet.add(str);
-            }
-        }
-        return prefixSet.toArray(new String[prefixSet.size()]);
+    @Test
+    public void testIsWebApp() {
+        assertTrue(Constants.IS_WEB_APP, "When servlet classes are available IS_WEB_APP should default to true");
     }
 }

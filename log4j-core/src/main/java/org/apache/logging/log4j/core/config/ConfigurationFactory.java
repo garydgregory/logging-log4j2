@@ -23,6 +23,7 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFact
 import org.apache.logging.log4j.core.config.composite.CompositeConfiguration;
 import org.apache.logging.log4j.core.config.plugins.util.PluginManager;
 import org.apache.logging.log4j.core.config.plugins.util.PluginType;
+import org.apache.logging.log4j.core.lookup.ConfigurationStrSubstitutor;
 import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.apache.logging.log4j.core.lookup.StrSubstitutor;
 import org.apache.logging.log4j.core.net.UrlConnectionFactory;
@@ -141,7 +142,7 @@ public abstract class ConfigurationFactory extends ConfigurationBuilderFactory {
 
     private static ConfigurationFactory configFactory = new Factory();
 
-    protected final StrSubstitutor substitutor = new StrSubstitutor(new Interpolator());
+    protected final StrSubstitutor substitutor = new ConfigurationStrSubstitutor(new Interpolator());
 
     private static final Lock LOCK = new ReentrantLock();
 
@@ -359,9 +360,8 @@ public abstract class ConfigurationFactory extends ConfigurationBuilderFactory {
             File file = FileUtils.fileFromUri(url.toURI());
             if (file != null) {
                 return new ConfigurationSource(urlConnection.getInputStream(), FileUtils.fileFromUri(url.toURI()));
-            } else {
-                return new ConfigurationSource(urlConnection.getInputStream(), url, urlConnection.getLastModified());
             }
+            return new ConfigurationSource(urlConnection.getInputStream(), url, urlConnection.getLastModified());
         } catch (final Exception ex) {
             final ConfigurationSource source = ConfigurationSource.fromResource(config, loader);
             if (source == null) {
@@ -420,13 +420,12 @@ public abstract class ConfigurationFactory extends ConfigurationBuilderFactory {
                         }
                     }
                     return getConfiguration(loggerContext, configLocationStr);
-                } else {
-                    final String log4j1ConfigStr = this.substitutor.replace(PropertiesUtil.getProperties()
-                            .getStringProperty(LOG4J1_CONFIGURATION_FILE_PROPERTY));
-                    if (log4j1ConfigStr != null) {
-                        System.setProperty(LOG4J1_EXPERIMENTAL, "true");
-                        return getConfiguration(LOG4J1_VERSION, loggerContext, log4j1ConfigStr);
-                    }
+                }
+                final String log4j1ConfigStr = this.substitutor.replace(PropertiesUtil.getProperties()
+                        .getStringProperty(LOG4J1_CONFIGURATION_FILE_PROPERTY));
+                if (log4j1ConfigStr != null) {
+                    System.setProperty(LOG4J1_EXPERIMENTAL, "true");
+                    return getConfiguration(LOG4J1_VERSION, loggerContext, log4j1ConfigStr);
                 }
                 for (final ConfigurationFactory factory : getFactories()) {
                     final String[] types = factory.getSupportedTypes();

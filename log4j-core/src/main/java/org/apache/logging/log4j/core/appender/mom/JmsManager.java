@@ -124,10 +124,15 @@ public class JmsManager extends AbstractManager {
 
         @Override
         public JmsManager createManager(final String name, final JmsManagerConfiguration data) {
-            try {
-                return new JmsManager(name, data);
-            } catch (final Exception e) {
-                logger().error("Error creating JmsManager using JmsManagerConfiguration [{}]", data, e);
+            if (JndiManager.isJndiJmsEnabled()) {
+                try {
+                    return new JmsManager(name, data);
+                } catch (final Exception e) {
+                    logger().error("Error creating JmsManager using JmsManagerConfiguration [{}]", data, e);
+                    return null;
+                }
+            } else {
+                logger().error("JNDI must be enabled by setting log4j2.enableJndiJms=true");
                 return null;
             }
         }

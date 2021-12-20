@@ -37,6 +37,10 @@
         <a href="#Servlet-2.5">Servlet 2.5</a> web application.
       </p>
       <p>
+        Due to the namespace change from <code>javax</code> to <code>jakarta</code> you need to use 
+        <code>log4j-jakarta-web</code> instead of <code>log4j-web</code> for Servlet 5.0 or newer.
+      </p>
+      <p>
         In either case, you'll need to add the <code>log4j-web</code> module to your deployment as detailed in the
         <a href="../maven-artifacts.html">Maven, Ivy, and Gradle Artifacts</a> manual page.
       </p>
@@ -241,6 +245,7 @@
           Note that in this case you must also set the "Log4jContextSelector" system property to
           "<kbd>org.apache.logging.log4j.core.selector.JndiContextSelector</kbd>".
         </p>
+        <p>For security reasons, from Log4j 2.17.0, JNDI must be enabled by setting system property <code>log4j2.enableJndiContextSelector=true</code>.</p>
       </subsection>
       <subsection name="Using Web Application Information During the Configuration">
         <a name="WebLookup" />

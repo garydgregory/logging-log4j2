@@ -20,7 +20,7 @@
   <artifactId>log4j</artifactId>
   <packaging>pom</packaging>
   <name>Apache Log4j 2</name>
-  <version>2.15.0-SNAPSHOT</version>
+  <version>2.17.1-SNAPSHOT</version>
   <parent>
     <groupId>org.apache.logging</groupId>
     <artifactId>logging-parent</artifactId>
@@ -188,18 +188,20 @@
   <properties>
     <!-- make sure to update these for each release! -->
     <log4jParentDir>${basedir}</log4jParentDir>
-    <Log4jReleaseVersion>2.14.1</Log4jReleaseVersion>
+    <Log4jReleaseVersion>2.17.0</Log4jReleaseVersion>
+    <Log4jReleaseVersionJava7>2.12.2</Log4jReleaseVersionJava7>
+    <Log4jReleaseVersionJava6>2.3</Log4jReleaseVersionJava6>
+    <!--Log4jReleaseManager>Ralph Goers</Log4jReleaseManager-->
+    <!--Log4jReleaseKey>B3D8E1BA</Log4jReleaseKey-->
     <Log4jReleaseManager>Ralph Goers</Log4jReleaseManager>
     <Log4jReleaseKey>B3D8E1BA</Log4jReleaseKey>
-    <!--<Log4jReleaseManager>Matt Sicker</Log4jReleaseManager> -->
-    <!--<Log4jReleaseKey>748F15B2CF9BA8F024155E6ED7C92B70FA1C814D</Log4jReleaseKey> -->
     <!-- note that any properties you want available in velocity templates must not use periods! -->
     <slf4jVersion>1.7.25</slf4jVersion>
     <logbackVersion>1.2.3</logbackVersion>
     <jackson1Version>1.9.13</jackson1Version>
     <jackson2Version>2.12.4</jackson2Version>
-    <spring-boot.version>2.3.6.RELEASE</spring-boot.version>
-    <springVersion>5.3.9</springVersion>
+    <spring-boot.version>2.5.7</spring-boot.version>
+    <springVersion>5.3.13</springVersion>
     <kubernetes-client.version>4.6.1</kubernetes-client.version>
     <flumeVersion>1.9.0</flumeVersion>
     <disruptorVersion>3.4.4</disruptorVersion>
@@ -213,7 +215,7 @@
     <compiler.plugin.version>3.8.1</compiler.plugin.version>
     <pmd.plugin.version>3.10.0</pmd.plugin.version>
     <changes.plugin.version>2.12.1</changes.plugin.version>
-    <javadoc.plugin.version>3.0.1</javadoc.plugin.version>
+    <javadoc.plugin.version>3.3.1</javadoc.plugin.version>
     <!-- surefire.plugin.version 2.18 yields http://jira.codehaus.org/browse/SUREFIRE-1121, which is fixed in 2.18.1 -->
     <!-- surefire.plugin.version 2.19 yields https://issues.apache.org/jira/browse/SUREFIRE-1193. -->
     <!-- all versions after 2.13 yield https://issues.apache.org/jira/browse/SUREFIRE-720 -->
@@ -255,7 +257,7 @@
     <junitVersion>4.13.2</junitVersion>
     <junitJupiterVersion>5.7.2</junitJupiterVersion>
     <mockitoVersion>3.11.2</mockitoVersion>
-    <xmlunitVersion>2.8.2</xmlunitVersion>
+    <xmlunitVersion>2.8.3</xmlunitVersion>
     <argLine>-Xms256m -Xmx1024m</argLine>
     <javaTargetVersion>1.8</javaTargetVersion>
     <module.name />
@@ -448,6 +450,11 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-web</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-jakarta-web</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -735,8 +742,8 @@
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
-        <artifactId>hamcrest-all</artifactId>
-        <version>1.3</version>
+        <artifactId>hamcrest</artifactId>
+        <version>2.2</version>
         <scope>test</scope>
       </dependency>
       <dependency>
@@ -947,6 +954,13 @@
         <groupId>de.flapdoodle.embed</groupId>
         <artifactId>de.flapdoodle.embed.mongo</artifactId>
         <version>3.0.0</version>
+        <scope>test</scope>
+      </dependency>
+      <!-- Testing LDAP -->
+      <dependency>
+        <groupId>org.zapodot</groupId>
+        <artifactId>embedded-ldap-junit</artifactId>
+        <version>0.8.1</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
@@ -1340,6 +1354,7 @@
             <exclude>**/README.md</exclude>
             <exclude>RELEASE-NOTES.md</exclude>
             <exclude>SECURITY.md</exclude>
+            <exclude>.java-version</exclude>
             <exclude>**/*.yml</exclude>
             <exclude>**/*.yaml</exclude>
             <exclude>**/*.json</exclude>
@@ -1355,6 +1370,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-doap-plugin</artifactId>
         <version>1.2</version>
+        <dependencies>
+          <!-- Fix java.lang.IllegalArgumentException: Invalid version number: Version number may be negative or greater than 255 -->
+          <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
+            <version>4.6.1</version>
+          </dependency>
+        </dependencies>
         <configuration>
           <doapOptions>
             <programmingLanguage>Java</programmingLanguage>
@@ -1482,6 +1505,7 @@
             <exclude>**/fluent-bit.conf</exclude>
             <exclude>**/rabbitmq.config</exclude>
             <exclude>**/MANIFEST.MF</exclude>
+            <exclude>.java-version</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -1519,6 +1543,7 @@
     <module>log4j-mongodb4</module>
     <module>log4j-cassandra</module>
     <module>log4j-web</module>
+    <module>log4j-jakarta-web</module>
     <module>log4j-perf</module>
     <module>log4j-iostreams</module>
     <module>log4j-jul</module>
@@ -1655,6 +1680,7 @@
                 <exclude>**/fluent-bit.conf</exclude>
                 <exclude>**/rabbitmq.config</exclude>
                 <exclude>**/MANIFEST.MF</exclude>
+                <exclude>.java-version</exclude>
               </excludes>
             </configuration>
             <executions>

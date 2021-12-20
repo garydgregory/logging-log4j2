@@ -1540,6 +1540,9 @@ public class ConnectionFactory {
         <a name="JMSTopicAppender"/>
         <subsection name="JMS Appender">
           <p>The JMS Appender sends the formatted log event to a JMS Destination.</p>
+          <p>The JMS Appender requires JNDI support so as of release 2.17.0 this appender will not function unless
+            <code>log4j2.enableJndiJms=true</code> is configured as a system property or environment
+            variable. See the <a href="./configuration.html#enableJndiJms">enableJndiJms</a> system property.</p>
           <p>
             Note that in Log4j 2.0, this appender was split into a JMSQueueAppender and a JMSTopicAppender. Starting
             in Log4j 2.1, these appenders were combined into the JMS Appender which makes no distinction between queues
@@ -1608,6 +1611,7 @@ public class ConnectionFactory {
               <td><em>Required</em></td>
               <td>The URL of the provider to use as defined by
                 <a class="javadoc" href="http://download.oracle.com/javase/7/docs/api/javax/naming/Context.html#PROVIDER_URL">PROVIDER_URL</a>.
+                From Log4j 2.17, only the <code>java:</code> protocol is supported.
               </td>
             </tr>
             <tr>
@@ -3219,6 +3223,8 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
               <p>
                 The <code>SizeBasedTriggeringPolicy</code> causes a rollover once the file has reached the specified
                 size. The size can be specified in bytes, with the suffix KB, MB or GB, for example <code>20MB</code>.
+                The size may also contain a fractional value such as <code>1.5 MB</code>. The size is evaluated
+                using the Java root Locale so a period must always be used for the fractional unit.
                 When combined with a time based triggering policy the file pattern must contain a <code>%i</code>
                 otherwise the target file will be overwritten on every rollover as the SizeBased Triggering Policy
                 will not cause the timestamp value in the file name to change. When used without a time based
@@ -3819,7 +3825,7 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
       <DefaultRolloverStrategy>
         <Delete basePath="${baseDir}" maxDepth="2">
           <IfFileName glob="*/app-*.log.gz" />
-          <IfLastModified age="60d" />
+          <IfLastModified age="P60D" />
         </Delete>
       </DefaultRolloverStrategy>
     </RollingFile>
@@ -3861,7 +3867,7 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
         -->
         <Delete basePath="${baseDir}" maxDepth="2">
           <IfFileName glob="*/app-*.log.gz">
-            <IfLastModified age="30d">
+            <IfLastModified age="P30D">
               <IfAny>
                 <IfAccumulatedFileSize exceeds="100 GB" />
                 <IfAccumulatedFileCount exceeds="10" />
@@ -4461,8 +4467,7 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
   <Appenders>
     <Routing name="Routing">
       <Script name="RoutingInit" language="JavaScript"><![CDATA[
-        importPackage(java.lang);
-        System.getProperty("os.name").search("Windows") > -1 ? "ServiceWindows" : "ServiceOther";]]]]><![CDATA[>
+        java.lang.System.getProperty("os.name").search("Windows") > -1 ? "ServiceWindows" : "ServiceOther";]]]]><![CDATA[>
       </Script>
       <Routes>
         <Route key="ServiceOther">
@@ -4778,8 +4783,7 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
   <Appenders>
     <ScriptAppenderSelector name="SelectIt">
       <Script language="JavaScript"><![CDATA[
-        importPackage(java.lang);
-        System.getProperty("os.name").search("Windows") > -1 ? "MyCustomWindowsAppender" : "MySyslogAppender";]]]]><![CDATA[>
+        java.lang.System.getProperty("os.name").search("Windows") > -1 ? "MyCustomWindowsAppender" : "MySyslogAppender";]]]]><![CDATA[>
       </Script>
       <AppenderSet>
         <MyCustomWindowsAppender name="MyAppender" ... />
@@ -5308,12 +5312,12 @@ public class JpaLogEntity extends AbstractLogEventWrapperEntity {
             <pre class="prettyprint linenums"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="warn" name="MyApp" packages="">
   <Appenders>
-    <TLSSyslog name="bsd" host="localhost" port="6514">
+    <Syslog name="bsd" host="localhost" port="6514" protocol="SSL">
       <SSL>
         <KeyStore   location="log4j2-keystore.jks" passwordEnvironmentVariable="KEYSTORE_PASSWORD"/>
         <TrustStore location="truststore.jks"      passwordFile="${sys:user.home}/truststore.pwd"/>
       </SSL>
-    </TLSSyslog>
+    </Syslog>
   </Appenders>
   <Loggers>
     <Root level="error">

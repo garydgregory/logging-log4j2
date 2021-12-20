@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.logging.log4j.junit.JndiRule;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -41,6 +42,11 @@ public class JndiLookupTest {
 
     @Rule
     public JndiRule jndiRule = new JndiRule(createBindings());
+
+    @BeforeClass
+    public static void beforeClass() {
+        System.setProperty("log4j2.enableJndiLookup", "true");
+    }
 
     private Map<String, Object> createBindings() {
         final Map<String, Object> map = new HashMap<>();

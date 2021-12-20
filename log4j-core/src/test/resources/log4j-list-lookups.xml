@@ -15,16 +15,15 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<Configuration status="OFF" name="MyApp">
+<Configuration status="WARN">
   <Appenders>
-    <Socket name="socket" host="localhost" port="5514" protocol="TCP" ignoreExceptions="false"
-        reconnectionDelay="0">
-      <PatternLayout pattern="%msg%n"/>
-    </Socket>
+    <List name="List">
+      <PatternLayout pattern="[%-5level] %c{1.} %msg{ansi}{lookups}%n" />
+    </List>
   </Appenders>
   <Loggers>
     <Root level="debug">
-      <AppenderRef ref="socket"/>
+      <AppenderRef ref="List" />
     </Root>
   </Loggers>
 </Configuration>

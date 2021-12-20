@@ -15,15 +15,15 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<Configuration status="WARN">
+<Configuration status="OFF">
   <Appenders>
-    <List name="List">
-      <PatternLayout pattern="[%-5level] %c{1.} %msg{ansi}{nolookups}%n" />
-    </List>
+    <File name="file" fileName="${web:initParam.myapp.logdir}/myapp.log" append="true">
+      <PatternLayout pattern="%d [%t] %-5p %c - %m%n"/>
+    </File>
   </Appenders>
   <Loggers>
-    <Root level="debug">
-      <AppenderRef ref="List" />
+    <Root level="warn">
+      <AppenderRef ref="file"/>
     </Root>
   </Loggers>
 </Configuration>
